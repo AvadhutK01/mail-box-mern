@@ -68,3 +68,32 @@ export const getPreviousRecipients = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+/**
+ * @desc    Get emails for the current user
+ * @route   GET /api/emails
+ * @access  Private
+ */
+export const getEmails = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    
+    // For now, only fetch received emails
+    const query = { receivers: req.user.email };
+
+    const emails = await Email.find(query)
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    const count = await Email.countDocuments(query);
+
+    res.json({
+      emails,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
