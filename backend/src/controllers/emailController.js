@@ -87,12 +87,40 @@ export const getEmails = async (req, res) => {
       .exec();
 
     const count = await Email.countDocuments(query);
+    const unreadCount = await Email.countDocuments({ ...query, isRead: false });
 
     res.json({
       emails,
       totalPages: Math.ceil(count / limit),
-      currentPage: page,
+      page: Number(page),
+      unreadCount,
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * @desc    Mark email as read
+ * @route   PATCH /api/emails/:id/read
+ * @access  Private
+ */
+export const markAsRead = async (req, res) => {
+  try {
+    const email = await Email.findById(req.params.id);
+
+    if (!email) {
+      return res.status(404).json({ message: 'Email not found' });
+    }
+
+    if (!email.receivers.includes(req.user.email)) {
+      return res.status(403).json({ message: 'Not authorized to mark this email as read' });
+    }
+
+    email.isRead = true;
+    await email.save();
+
+    res.status(200).json({ message: 'Email marked as read' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

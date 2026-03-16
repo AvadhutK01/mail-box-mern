@@ -1,14 +1,14 @@
-import { Nav, Button } from 'react-bootstrap';
+import { Nav, Button, Badge } from 'react-bootstrap';
 import { IoMailOutline, IoSendOutline, IoPencil } from 'react-icons/io5';
 
-const Sidebar = ({ onCompose }) => {
+const Sidebar = ({ onCompose, unreadCount }) => {
   return (
-    <div className="bg-light h-100 p-3" style={{ width: '240px', borderRight: '1px solid #dee2e6' }}>
+    <div className="h-100 p-3 bg-white">
       <Button 
         variant="primary" 
-        className="w-100 mb-4 py-2 shadow-sm d-flex align-items-center justify-content-center" 
+        className="w-100 mb-4 py-2 shadow-sm d-flex align-items-center justify-content-center border-0" 
         onClick={onCompose}
-        style={{ borderRadius: '12px', fontWeight: '500' }}
+        style={{ borderRadius: '8px', fontWeight: '600' }}
       >
         <IoPencil className="me-2" />
         Compose
@@ -17,11 +17,16 @@ const Sidebar = ({ onCompose }) => {
         <Nav.Item>
           <Nav.Link 
             active={true}
-            className="d-flex align-items-center px-3 py-2 bg-primary text-white shadow-sm"
-            style={{ borderRadius: '8px', cursor: 'pointer' }}
+            className="d-flex align-items-center px-3 py-2 shadow-sm"
+            style={{ borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}
           >
             <IoMailOutline size={20} className="me-3" />
-            Inbox
+            <span className="flex-grow-1 text-start">Inbox</span>
+            {unreadCount > 0 && (
+              <Badge pill bg="light" text="primary" className="ms-2">
+                {unreadCount}
+              </Badge>
+            )}
           </Nav.Link>
         </Nav.Item>
       </Nav>

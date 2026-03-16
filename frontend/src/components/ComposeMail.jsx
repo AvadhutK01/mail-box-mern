@@ -47,7 +47,7 @@ const ComposeMail = ({ show, handleClose }) => {
   const isFormValid = recipients.length > 0 && subject.trim() !== '' && body.trim() !== '' && body !== '<p><br></p>';
 
   return (
-    <Modal show={show} onHide={handleClose} size="lg" centered>
+    <Modal show={show} onHide={handleClose} size="lg" centered fullscreen="md-down">
       <Modal.Header closeButton>
         <Modal.Title>New Message</Modal.Title>
       </Modal.Header>

@@ -5,26 +5,30 @@ import { ENDPOINTS } from '../api/endpoint';
 import MailItem from './MailItem';
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 
-const MailList = ({ folder }) => {
+const MailList = ({ folder, onSelectMail, onUpdateUnread }) => {
   const [mails, setMails] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const fetchMails = async (p = 1) => {
+  const fetchMails = async (p = page) => {
     setLoading(true);
-    setMails([]);
     setError('');
     try {
       const response = await axiosInstance.get(ENDPOINTS.GET_EMAILS, {
-        params: { type: folder, page: p, limit: 12 },
+        params: { type: folder, page: p, limit: 10 },
       });
       setMails(response.data.emails);
-      setTotalPages(response.data.pages);
-      setPage(response.data.page);
+      setTotalPages(response.data.totalPages || 1);
+      setPage(response.data.page || 1);
+      
+      if (onUpdateUnread) {
+        onUpdateUnread(response.data.unreadCount || 0);
+      }
     } catch (err) {
-      setError('Failed to load emails. Please try again.');
+      setError(err.response?.data?.message || 'Failed to fetch emails');
+      setMails([]);
     } finally {
       setLoading(false);
     }
@@ -35,15 +39,23 @@ const MailList = ({ folder }) => {
     fetchMails(1);
   }, [folder]);
 
+  useEffect(() => {
+    // Only fetch if page changes and it's not the initial load for page 1
+    // or if totalPages has been updated and we need to re-fetch for the current page
+    if (page > 1 || totalPages > 1) {
+      fetchMails(page);
+    }
+  }, [page, folder]); // Added folder to dependencies as fetchMails uses it
+
   const handleNext = () => {
     if (page < totalPages) {
-      fetchMails(page + 1);
+      setPage(prev => prev + 1);
     }
   };
 
   const handlePrev = () => {
     if (page > 1) {
-      fetchMails(page - 1);
+      setPage(prev => prev - 1);
     }
   };
 
@@ -56,11 +68,11 @@ const MailList = ({ folder }) => {
   }
 
   return (
-    <div className="d-flex flex-column h-100 bg-white shadow-sm border rounded overflow-hidden">
-      <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
-        <h5 className="mb-0 text-capitalize">{folder === 'received' ? 'Inbox' : 'Sent'}</h5>
-        <div className="d-flex align-items-center gap-2">
-          <small className="text-muted">Page {page} of {totalPages}</small>
+    <div className="d-flex flex-column h-100 bg-white border rounded shadow-sm overflow-hidden">
+      <div className="p-2 p-md-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+        <h6 className="mb-0 text-capitalize fw-bold">{folder === 'received' ? 'Inbox' : 'Sent'}</h6>
+        <div className="d-flex align-items-center gap-1 gap-md-2">
+          <small className="text-muted small me-2 d-none d-sm-inline">Page {page} of {totalPages}</small>
           <Button 
             variant="outline-secondary" 
             size="sm" 
@@ -68,7 +80,7 @@ const MailList = ({ folder }) => {
             onClick={handlePrev}
             className="border-0 rounded-circle p-1 d-flex align-items-center"
           >
-            <IoChevronBack size={20} />
+            <IoChevronBack size={18} />
           </Button>
           <Button 
             variant="outline-secondary" 
@@ -77,20 +89,20 @@ const MailList = ({ folder }) => {
             onClick={handleNext}
             className="border-0 rounded-circle p-1 d-flex align-items-center"
           >
-            <IoChevronForward size={20} />
+            <IoChevronForward size={18} />
           </Button>
         </div>
       </div>
 
       <div className="flex-grow-1 overflow-auto custom-scrollbar">
-        {error && <Alert variant="danger" className="m-3">{error}</Alert>}
+        {error && <Alert variant="danger" className="m-3 p-2 small">{error}</Alert>}
         {!loading && mails.length === 0 && !error && (
-          <div className="text-center mt-5 text-muted">
-            <p>No messages found in {folder === 'received' ? 'Inbox' : 'Sent'}</p>
+          <div className="text-center mt-5 text-muted px-3">
+            <p className="small">No messages found in {folder === 'received' ? 'Inbox' : 'Sent'}</p>
           </div>
         )}
         {mails.map((mail) => (
-          <MailItem key={mail._id} mail={mail} type={folder} />
+          <MailItem key={mail._id} mail={mail} type={folder} onSelect={() => onSelectMail(mail)} />
         ))}
       </div>
     </div>

@@ -82,9 +82,10 @@ const RecipientInput = ({ recipients, setRecipients }) => {
             {email}
             <IoCloseOutline 
               size={18} 
-              className="ms-2 cursor-pointer" 
+              className="ms-2" 
               onClick={() => removeRecipient(email)} 
               role="button"
+              style={{ cursor: 'pointer' }}
             />
           </Badge>
         ))}

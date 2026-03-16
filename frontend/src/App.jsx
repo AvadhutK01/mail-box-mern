@@ -6,12 +6,31 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ComposeMail from './components/ComposeMail';
 import Sidebar from './components/Sidebar';
 import MailList from './components/MailList';
-import { Button, Container, Navbar } from 'react-bootstrap';
-import { IoMailOutline } from 'react-icons/io5';
+import MailDetail from './components/MailDetail';
+import axiosInstance from './api/axiosInstance';
+import { ENDPOINTS } from './api/endpoint';
+import { Button, Container, Navbar, Offcanvas, Row, Col } from 'react-bootstrap';
+import { IoMailOutline, IoMenuOutline } from 'react-icons/io5';
 
 const Home = () => {
   const [showCompose, setShowCompose] = useState(false);
+  const [selectedMail, setSelectedMail] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showSidebar, setShowSidebar] = useState(false);
   const navigate = useNavigate();
+
+  const handleSelectMail = async (mail) => {
+    setSelectedMail(mail);
+    setShowSidebar(false); // Close sidebar on mobile if open
+    if (!mail.isRead) {
+      try {
+        await axiosInstance.patch(ENDPOINTS.MARK_AS_READ.replace(':id', mail._id));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      } catch (err) {
+        console.error('Failed to mark mail as read', err);
+      }
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -20,32 +39,76 @@ const Home = () => {
   };
 
   return (
-    <div className="vh-100 d-flex flex-column bg-light">
-      <Navbar bg="white" className="border-bottom px-4 py-2 flex-shrink-0">
-        <Container fluid>
-          <Navbar.Brand className="fw-bold text-primary d-flex align-items-center">
-            <IoMailOutline className="me-2" size={28} />
-            MailBox
-          </Navbar.Brand>
-          <div className="ms-auto d-flex align-items-center gap-3">
-            <span className="text-muted small d-none d-md-block">
+    <div className="vh-100 d-flex flex-column bg-light overflow-hidden">
+      <Navbar bg="white" className="border-bottom px-3 py-2 flex-shrink-0 sticky-top">
+        <Container fluid className="px-0">
+          <div className="d-flex align-items-center">
+            <Button 
+              variant="light" 
+              className="d-lg-none border-0 me-2" 
+              onClick={() => setShowSidebar(true)}
+            >
+              <IoMenuOutline size={24} />
+            </Button>
+            <Navbar.Brand className="fw-bold text-primary d-flex align-items-center mb-0">
+              <IoMailOutline className="me-2" size={28} />
+              <span className="d-none d-sm-inline">MailBox</span>
+            </Navbar.Brand>
+          </div>
+          
+          <div className="ms-auto d-flex align-items-center gap-2 gap-md-3">
+            <span className="text-muted small d-none d-md-block fw-medium">
               {localStorage.getItem('userEmail')}
             </span>
-            <Button variant="outline-danger" size="sm" onClick={handleLogout} className="px-3 rounded-pill">
+            <Button variant="outline-danger" size="sm" onClick={handleLogout} className="px-3 rounded-pill fw-medium">
               Logout
             </Button>
           </div>
         </Container>
       </Navbar>
 
-      <div className="flex-grow-1 d-flex overflow-hidden">
-        <Sidebar
-          onCompose={() => setShowCompose(true)}
-        />
-        <main className="flex-grow-1 p-4 overflow-hidden d-flex flex-column">
-          <MailList folder="received" />
-        </main>
-      </div>
+      <Container fluid className="flex-grow-1 p-0 overflow-hidden">
+        <Row className="h-100 g-0">
+          {/* Desktop Sidebar */}
+          <Col lg={3} xl={2} className="d-none d-lg-block border-end bg-white">
+            <Sidebar
+              onCompose={() => { setShowCompose(true); setShowSidebar(false); }}
+              unreadCount={unreadCount}
+            />
+          </Col>
+
+          {/* Mobile Sidebar (Offcanvas) */}
+          <Offcanvas show={showSidebar} onHide={() => setShowSidebar(false)} className="d-lg-none">
+            <Offcanvas.Header closeButton className="border-bottom bg-light">
+              <Offcanvas.Title className="fw-bold text-primary d-flex align-items-center">
+                <IoMailOutline className="me-2" size={24} />
+                MailBox
+              </Offcanvas.Title>
+            </Offcanvas.Header>
+            <Offcanvas.Body className="p-0">
+              <Sidebar
+                onCompose={() => { setShowCompose(true); setShowSidebar(false); }}
+                unreadCount={unreadCount}
+              />
+            </Offcanvas.Body>
+          </Offcanvas>
+
+          {/* Main Content Area */}
+          <Col lg={9} xl={10} className="h-100 position-relative">
+            <main className="h-100 p-0 p-md-4 d-flex flex-column overflow-hidden">
+              {selectedMail ? (
+                <MailDetail mail={selectedMail} onBack={() => setSelectedMail(null)} />
+              ) : (
+                <MailList 
+                  folder="received" 
+                  onSelectMail={handleSelectMail} 
+                  onUpdateUnread={setUnreadCount} 
+                />
+              )}
+            </main>
+          </Col>
+        </Row>
+      </Container>
 
       <ComposeMail show={showCompose} handleClose={() => setShowCompose(false)} />
     </div>
