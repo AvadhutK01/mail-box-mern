@@ -5,59 +5,43 @@ import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 import { ENDPOINTS } from '../api/endpoint';
 
-const Signup = () => {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccess(false);
 
-    if (!email || !password || !confirmPassword) {
-      setError('All fields are mandatory');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
+    if (!email || !password) {
+      setError('Email and password are required');
       return;
     }
 
     setLoading(true);
     try {
-      const response = await axiosInstance.post(ENDPOINTS.SIGNUP, {
+      const response = await axiosInstance.post(ENDPOINTS.LOGIN, {
         email,
         password,
-        confirmPassword,
       });
 
-      if (response.status === 201) {
-        console.log('User has successfully signed up.');
+      if (response.status === 200) {
+        console.log('User successfully logged in.');
         localStorage.setItem('token', response.data.token);
-        setSuccess(true);
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
-        setTimeout(() => {
-          navigate('/');
-        }, 1500);
+        navigate('/');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong. Please try again.');
+      setError(err.response?.data?.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }
   };
 
-  const isFormValid = email && password && confirmPassword;
+  const isFormValid = email && password;
 
   return (
     <Container className="mt-5">
@@ -65,9 +49,8 @@ const Signup = () => {
         <Col md={6}>
           <Card className="shadow-sm border-0">
             <Card.Body className="p-4">
-              <h2 className="text-center mb-4">Sign Up</h2>
+              <h2 className="text-center mb-4">Login</h2>
               {error && <Alert variant="danger">{error}</Alert>}
-              {success && <Alert variant="success">User registered successfully! Redirecting...</Alert>}
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-3" controlId="formBasicEmail">
                   <Form.Label>Email address</Form.Label>
@@ -80,7 +63,7 @@ const Signup = () => {
                   />
                 </Form.Group>
 
-                <Form.Group className="mb-3" controlId="formBasicPassword">
+                <Form.Group className="mb-4" controlId="formBasicPassword">
                   <Form.Label>Password</Form.Label>
                   <InputGroup>
                     <Form.Control
@@ -99,25 +82,6 @@ const Signup = () => {
                   </InputGroup>
                 </Form.Group>
 
-                <Form.Group className="mb-4" controlId="formConfirmPassword">
-                  <Form.Label>Confirm Password</Form.Label>
-                  <InputGroup>
-                    <Form.Control
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      placeholder="Confirm Password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                    />
-                    <Button 
-                      variant="outline-secondary" 
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                    </Button>
-                  </InputGroup>
-                </Form.Group>
-
                 <div className="d-grid gap-2 mb-3">
                   <Button 
                     variant="primary" 
@@ -125,11 +89,11 @@ const Signup = () => {
                     disabled={!isFormValid || loading}
                     className="py-2"
                   >
-                    {loading ? 'Signing Up...' : 'Sign Up'}
+                    {loading ? 'Logging In...' : 'Login'}
                   </Button>
                 </div>
                 <div className="text-center">
-                  Already have an account? <Link to="/login">Login</Link>
+                  Don't have an account? <Link to="/register">Sign Up</Link>
                 </div>
               </Form>
             </Card.Body>
@@ -140,6 +104,4 @@ const Signup = () => {
   );
 };
 
-export default Signup;
-
-
+export default Login;
