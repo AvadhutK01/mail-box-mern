@@ -120,7 +120,7 @@ const Home = () => {
                 <MailDetail
                   mail={selectedMail}
                   onBack={() => setSelectedMail(null)}
-                  onDelete={currentFolder === 'received' ? handleDeleteMail : undefined}
+                  onDelete={handleDeleteMail}
                 />
               ) : (
                 <MailList 

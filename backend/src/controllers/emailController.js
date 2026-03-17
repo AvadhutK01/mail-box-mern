@@ -130,7 +130,7 @@ export const markAsRead = async (req, res) => {
   }
 };
 /**
- * @desc    Delete an email (removes current user from receivers)
+ * @desc    Delete an email (sender hard-deletes; receiver removes themselves)
  * @route   DELETE /api/emails/:id
  * @access  Private
  */
@@ -142,16 +142,22 @@ export const deleteEmail = async (req, res) => {
       return res.status(404).json({ message: 'Email not found' });
     }
 
-    if (!email.receivers.includes(req.user.email)) {
+    const isSender = email.sender === req.user.email;
+    const isReceiver = email.receivers.includes(req.user.email);
+
+    if (!isSender && !isReceiver) {
       return res.status(403).json({ message: 'Not authorized to delete this email' });
     }
 
-    email.receivers = email.receivers.filter(r => r !== req.user.email);
-
-    if (email.receivers.length === 0) {
+    if (isSender) {
       await Email.findByIdAndDelete(req.params.id);
     } else {
-      await email.save();
+      email.receivers = email.receivers.filter(r => r !== req.user.email);
+      if (email.receivers.length === 0) {
+        await Email.findByIdAndDelete(req.params.id);
+      } else {
+        await email.save();
+      }
     }
 
     res.status(200).json({ message: 'Email deleted successfully' });
