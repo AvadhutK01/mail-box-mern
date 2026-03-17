@@ -1,27 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Badge, Form, ListGroup } from 'react-bootstrap';
 import { IoCloseOutline } from 'react-icons/io5';
-import axiosInstance from '../api/axiosInstance';
-import { ENDPOINTS } from '../api/endpoint';
+import usePreviousRecipients from '../hooks/usePreviousRecipients';
 
 const RecipientInput = ({ recipients, setRecipients }) => {
   const [inputValue, setInputValue] = useState('');
-  const [previousRecipients, setPreviousRecipients] = useState([]);
+  const { previousRecipients } = usePreviousRecipients();
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const fetchRecipients = async () => {
-      try {
-        const response = await axiosInstance.get(ENDPOINTS.GET_PREVIOUS_RECIPIENTS);
-        setPreviousRecipients(response.data);
-      } catch (err) {
-        console.error('Failed to fetch recipients', err);
-      }
-    };
-    fetchRecipients();
-  }, []);
 
   useEffect(() => {
     if (inputValue.trim()) {

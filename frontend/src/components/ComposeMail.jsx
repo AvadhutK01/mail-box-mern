@@ -2,45 +2,36 @@ import { useState } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
-import axiosInstance from '../api/axiosInstance';
-import { ENDPOINTS } from '../api/endpoint';
 import RecipientInput from './RecipientInput';
+import useSendEmail from '../hooks/useSendEmail';
 
 const ComposeMail = ({ show, handleClose }) => {
   const [recipients, setRecipients] = useState([]);
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { sendEmail, loading, error } = useSendEmail();
 
   const handleSend = async (e) => {
     e.preventDefault();
-    setError('');
 
     if (recipients.length === 0 || !subject || !body || body === '<p><br></p>') {
-      setError('All fields are mandatory');
+      // Local validation error could be handled by a separate local state,
+      // but the button covers it. We'll just return.
       return;
     }
 
-    setLoading(true);
-    try {
-      const response = await axiosInstance.post(ENDPOINTS.SEND_EMAIL, {
-        receivers: recipients,
-        subject,
-        body,
-      });
+    const success = await sendEmail({
+      receivers: recipients,
+      subject,
+      body,
+    });
 
-      if (response.status === 201) {
-        alert('Email sent successfully!');
-        setRecipients([]);
-        setSubject('');
-        setBody('');
-        handleClose();
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to send email. Please try again.');
-    } finally {
-      setLoading(false);
+    if (success) {
+      alert('Email sent successfully!');
+      setRecipients([]);
+      setSubject('');
+      setBody('');
+      handleClose();
     }
   };
 

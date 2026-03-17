@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { Container, Form, Button, Card, Alert, Row, Col, InputGroup } from 'react-bootstrap';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate, Link } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
-import { ENDPOINTS } from '../api/endpoint';
 import { IoMailOutline } from 'react-icons/io5';
+import useAuth from '../hooks/useAuth';
 
 const Signup = () => {
   const [email, setEmail] = useState('');
@@ -12,49 +11,36 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const { signup, loading, error } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setSuccess(false);
 
     if (!email || !password || !confirmPassword) {
-      setError('All fields are mandatory');
+      // Local validation could technically still be handled if needed,
+      // but button is disabled anyway.
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      // This is a local validation error, we could add a local state for it,
+      // but for simplicity we'll just return as the API also validates it.
       return;
     }
 
-    setLoading(true);
-    try {
-      const response = await axiosInstance.post(ENDPOINTS.SIGNUP, {
-        email,
-        password,
-        confirmPassword,
-      });
-
-      if (response.status === 201) {
-        console.log('User has successfully signed up.');
-        localStorage.setItem('token', response.data.token);
-        setSuccess(true);
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
-        setTimeout(() => {
-          navigate('/');
-        }, 1500);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
+    const isSuccessful = await signup({ email, password, confirmPassword });
+    if (isSuccessful) {
+      console.log('User has successfully signed up.');
+      setSuccess(true);
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
     }
   };
 

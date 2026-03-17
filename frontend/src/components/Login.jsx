@@ -2,43 +2,29 @@ import { useState } from 'react';
 import { Container, Form, Button, Card, Alert, Row, Col, InputGroup } from 'react-bootstrap';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate, Link } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
-import { ENDPOINTS } from '../api/endpoint';
 import { IoMailOutline } from 'react-icons/io5';
+import useAuth from '../hooks/useAuth';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { login, loading, error } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
 
     if (!email || !password) {
-      setError('Email and password are required');
+      // Local validation could technically still be handled if needed,
+      // but button is disabled anyway.
       return;
     }
 
-    setLoading(true);
-    try {
-      const response = await axiosInstance.post(ENDPOINTS.LOGIN, {
-        email,
-        password,
-      });
-
-      if (response.status === 200) {
-        console.log('User successfully logged in.');
-        localStorage.setItem('token', response.data.token);
-        navigate('/');
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Invalid email or password');
-    } finally {
-      setLoading(false);
+    const success = await login({ email, password });
+    if (success) {
+      console.log('User successfully logged in.');
+      navigate('/');
     }
   };
 

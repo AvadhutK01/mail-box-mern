@@ -7,8 +7,7 @@ import ComposeMail from './components/ComposeMail';
 import Sidebar from './components/Sidebar';
 import MailList from './components/MailList';
 import MailDetail from './components/MailDetail';
-import axiosInstance from './api/axiosInstance';
-import { ENDPOINTS } from './api/endpoint';
+import useMailActions from './hooks/useMailActions';
 import { Button, Container, Navbar, Offcanvas, Row, Col } from 'react-bootstrap';
 import { IoMailOutline, IoMenuOutline } from 'react-icons/io5';
 
@@ -19,6 +18,7 @@ const Home = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [currentFolder, setCurrentFolder] = useState('received');
+  const { markAsRead, deleteMail } = useMailActions();
   const navigate = useNavigate();
 
   const handleFolderChange = (folder) => {
@@ -32,7 +32,7 @@ const Home = () => {
     setShowSidebar(false);
     if (!mail.isRead && currentFolder === 'received') {
       try {
-        await axiosInstance.patch(ENDPOINTS.MARK_AS_READ.replace(':id', mail._id));
+        await markAsRead(mail._id);
         setUnreadCount(prev => Math.max(0, prev - 1));
       } catch (err) {
         console.error('Failed to mark mail as read', err);
@@ -42,12 +42,12 @@ const Home = () => {
 
   const handleDeleteMail = async (mailId) => {
     try {
-      await axiosInstance.delete(ENDPOINTS.DELETE_EMAIL.replace(':id', mailId));
+      await deleteMail(mailId);
       setSelectedMail(null);
       setRefreshKey(prev => prev + 1);
     } catch (err) {
       console.error('Failed to delete email', err);
-      alert(err.response?.data?.message || 'Failed to delete email');
+      alert('Failed to delete email');
     }
   };
 
