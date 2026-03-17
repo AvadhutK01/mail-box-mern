@@ -75,10 +75,11 @@ export const getPreviousRecipients = async (req, res) => {
  */
 export const getEmails = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
-    
-    // For now, only fetch received emails
-    const query = { receivers: req.user.email };
+    const { page = 1, limit = 10, type = 'received' } = req.query;
+
+    const query = type === 'sent'
+      ? { sender: req.user.email }
+      : { receivers: req.user.email };
 
     const emails = await Email.find(query)
       .sort({ createdAt: -1 })
@@ -87,7 +88,10 @@ export const getEmails = async (req, res) => {
       .exec();
 
     const count = await Email.countDocuments(query);
-    const unreadCount = await Email.countDocuments({ ...query, isRead: false });
+
+    const unreadCount = type === 'sent'
+      ? 0
+      : await Email.countDocuments({ ...query, isRead: false });
 
     res.json({
       emails,

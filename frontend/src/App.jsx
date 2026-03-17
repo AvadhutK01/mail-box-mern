@@ -18,12 +18,19 @@ const Home = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showSidebar, setShowSidebar] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [currentFolder, setCurrentFolder] = useState('received');
   const navigate = useNavigate();
+
+  const handleFolderChange = (folder) => {
+    setCurrentFolder(folder);
+    setSelectedMail(null);
+    setShowSidebar(false);
+  };
 
   const handleSelectMail = async (mail) => {
     setSelectedMail(mail);
-    setShowSidebar(false); // Close sidebar on mobile if open
-    if (!mail.isRead) {
+    setShowSidebar(false);
+    if (!mail.isRead && currentFolder === 'received') {
       try {
         await axiosInstance.patch(ENDPOINTS.MARK_AS_READ.replace(':id', mail._id));
         setUnreadCount(prev => Math.max(0, prev - 1));
@@ -81,15 +88,15 @@ const Home = () => {
 
       <Container fluid className="flex-grow-1 p-0 overflow-hidden">
         <Row className="h-100 g-0">
-          {/* Desktop Sidebar */}
           <Col lg={3} xl={2} className="d-none d-lg-block border-end bg-white">
             <Sidebar
               onCompose={() => { setShowCompose(true); setShowSidebar(false); }}
               unreadCount={unreadCount}
+              currentFolder={currentFolder}
+              onFolderChange={handleFolderChange}
             />
           </Col>
 
-          {/* Mobile Sidebar (Offcanvas) */}
           <Offcanvas show={showSidebar} onHide={() => setShowSidebar(false)} className="d-lg-none">
             <Offcanvas.Header closeButton className="border-bottom bg-light">
               <Offcanvas.Title className="fw-bold text-primary d-flex align-items-center">
@@ -101,6 +108,8 @@ const Home = () => {
               <Sidebar
                 onCompose={() => { setShowCompose(true); setShowSidebar(false); }}
                 unreadCount={unreadCount}
+                currentFolder={currentFolder}
+                onFolderChange={handleFolderChange}
               />
             </Offcanvas.Body>
           </Offcanvas>
@@ -108,10 +117,14 @@ const Home = () => {
           <Col lg={9} xl={10} className="h-100 position-relative">
             <main className="h-100 p-0 p-md-4 d-flex flex-column overflow-hidden">
               {selectedMail ? (
-                <MailDetail mail={selectedMail} onBack={() => setSelectedMail(null)} onDelete={handleDeleteMail} />
+                <MailDetail
+                  mail={selectedMail}
+                  onBack={() => setSelectedMail(null)}
+                  onDelete={currentFolder === 'received' ? handleDeleteMail : undefined}
+                />
               ) : (
                 <MailList 
-                  folder="received" 
+                  folder={currentFolder}
                   onSelectMail={handleSelectMail} 
                   onUpdateUnread={setUnreadCount}
                   refreshKey={refreshKey}

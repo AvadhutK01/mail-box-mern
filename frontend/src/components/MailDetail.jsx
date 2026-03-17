@@ -33,19 +33,21 @@ const MailDetail = ({ mail, onBack, onDelete }) => {
           Back
         </Button>
 
-        <div className="ms-auto">
-          <Button
-            variant="outline-danger"
-            size="sm"
-            onClick={handleDelete}
-            disabled={deleting}
-            className="border-0 rounded-pill px-3 d-flex align-items-center"
-            title="Delete email"
-          >
-            <IoTrashOutline size={18} className="me-1" />
-            {deleting ? 'Deleting...' : 'Delete'}
-          </Button>
-        </div>
+        {onDelete && (
+          <div className="ms-auto">
+            <Button
+              variant="outline-danger"
+              size="sm"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="border-0 rounded-pill px-3 d-flex align-items-center"
+              title="Delete email"
+            >
+              <IoTrashOutline size={18} className="me-1" />
+              {deleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="flex-grow-1 overflow-auto p-3 p-md-4 custom-scrollbar bg-white">
