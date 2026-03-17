@@ -5,7 +5,7 @@ import { ENDPOINTS } from '../api/endpoint';
 import MailItem from './MailItem';
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 
-const MailList = ({ folder, onSelectMail, onUpdateUnread }) => {
+const MailList = ({ folder, onSelectMail, onUpdateUnread, refreshKey }) => {
   const [mails, setMails] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -37,15 +37,13 @@ const MailList = ({ folder, onSelectMail, onUpdateUnread }) => {
   useEffect(() => {
     setPage(1);
     fetchMails(1);
-  }, [folder]);
+  }, [folder, refreshKey]);
 
   useEffect(() => {
-    // Only fetch if page changes and it's not the initial load for page 1
-    // or if totalPages has been updated and we need to re-fetch for the current page
     if (page > 1 || totalPages > 1) {
       fetchMails(page);
     }
-  }, [page, folder]); // Added folder to dependencies as fetchMails uses it
+  }, [page, folder]);
 
   const handleNext = () => {
     if (page < totalPages) {

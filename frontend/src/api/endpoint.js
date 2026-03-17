@@ -5,4 +5,5 @@ export const ENDPOINTS = {
   GET_PREVIOUS_RECIPIENTS: '/emails/recipients',
   GET_EMAILS: '/emails',
   MARK_AS_READ: '/emails/:id/read',
+  DELETE_EMAIL: '/emails/:id',
 };

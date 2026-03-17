@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Button } from 'react-bootstrap';
-import { IoArrowBackOutline, IoPersonCircleOutline } from 'react-icons/io5';
+import { IoArrowBackOutline, IoPersonCircleOutline, IoTrashOutline } from 'react-icons/io5';
 
-const MailDetail = ({ mail, onBack }) => {
+const MailDetail = ({ mail, onBack, onDelete }) => {
+  const [deleting, setDeleting] = useState(false);
   const { sender, receivers, subject, body, createdAt } = mail;
   const date = new Date(createdAt).toLocaleString([], { 
     month: 'short', 
@@ -10,6 +12,13 @@ const MailDetail = ({ mail, onBack }) => {
     hour: '2-digit', 
     minute: '2-digit' 
   });
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this email?')) return;
+    setDeleting(true);
+    await onDelete(mail._id);
+    setDeleting(false);
+  };
 
   return (
     <div className="d-flex flex-column h-100 bg-white border-0 border-md-1 rounded-0 rounded-md shadow-sm overflow-hidden">
@@ -23,6 +32,20 @@ const MailDetail = ({ mail, onBack }) => {
           <IoArrowBackOutline size={18} className="me-2" />
           Back
         </Button>
+
+        <div className="ms-auto">
+          <Button
+            variant="outline-danger"
+            size="sm"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="border-0 rounded-pill px-3 d-flex align-items-center"
+            title="Delete email"
+          >
+            <IoTrashOutline size={18} className="me-1" />
+            {deleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </div>
       </div>
 
       <div className="flex-grow-1 overflow-auto p-3 p-md-4 custom-scrollbar bg-white">

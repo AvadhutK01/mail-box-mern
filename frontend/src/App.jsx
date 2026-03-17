@@ -17,6 +17,7 @@ const Home = () => {
   const [selectedMail, setSelectedMail] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const navigate = useNavigate();
 
   const handleSelectMail = async (mail) => {
@@ -29,6 +30,17 @@ const Home = () => {
       } catch (err) {
         console.error('Failed to mark mail as read', err);
       }
+    }
+  };
+
+  const handleDeleteMail = async (mailId) => {
+    try {
+      await axiosInstance.delete(ENDPOINTS.DELETE_EMAIL.replace(':id', mailId));
+      setSelectedMail(null);
+      setRefreshKey(prev => prev + 1);
+    } catch (err) {
+      console.error('Failed to delete email', err);
+      alert(err.response?.data?.message || 'Failed to delete email');
     }
   };
 
@@ -93,16 +105,16 @@ const Home = () => {
             </Offcanvas.Body>
           </Offcanvas>
 
-          {/* Main Content Area */}
           <Col lg={9} xl={10} className="h-100 position-relative">
             <main className="h-100 p-0 p-md-4 d-flex flex-column overflow-hidden">
               {selectedMail ? (
-                <MailDetail mail={selectedMail} onBack={() => setSelectedMail(null)} />
+                <MailDetail mail={selectedMail} onBack={() => setSelectedMail(null)} onDelete={handleDeleteMail} />
               ) : (
                 <MailList 
                   folder="received" 
                   onSelectMail={handleSelectMail} 
-                  onUpdateUnread={setUnreadCount} 
+                  onUpdateUnread={setUnreadCount}
+                  refreshKey={refreshKey}
                 />
               )}
             </main>
